@@ -22,7 +22,17 @@ class _StatsState extends State<Stats> {
       .fold(0.0, (sum, transaction) => sum + transaction.amount);
 
   final List<String> filters = ['Week', 'Month', 'Year'];
+  final List<String> transactionTypes = ['Expenses', 'Income'];
   int selectedIndex = 1;
+  int selectedTransactionType = 0;
+
+  List<Transaction> get filteredTransactions {
+    return widget.transactions.where((transaction) {
+      return selectedTransactionType == 0
+          ? !transaction.isIncome
+          : transaction.isIncome;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +54,7 @@ class _StatsState extends State<Stats> {
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -109,7 +119,7 @@ class _StatsState extends State<Stats> {
                 ),
               ),
 
-              SizedBox(height: 30),
+              SizedBox(height: 20),
               Container(
                 padding: EdgeInsets.all(2),
 
@@ -162,6 +172,35 @@ class _StatsState extends State<Stats> {
                 ),
               ),
               SizedBox(height: 10),
+              DropdownButton<int>(
+                value: selectedTransactionType,
+                dropdownColor: Colors.white70,
+                underline: Container(),
+                icon: const Icon(Icons.arrow_drop_down),
+                elevation: 16,
+                style: GoogleFonts.roboto(color: Colors.black54, fontSize: 16),
+
+                onChanged: (int? newType) {
+                  setState(() {
+                    if (newType != null) {
+                      selectedTransactionType = newType;
+                    }
+                  });
+                },
+                items:
+                    transactionTypes.map<DropdownMenuItem<int>>((String type) {
+                      return DropdownMenuItem<int>(
+                        value: transactionTypes.indexOf(type),
+                        child: Text(
+                          type,
+                          style: GoogleFonts.roboto(
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+              ),
               widget.transactions.isEmpty
                   ? Padding(
                     padding: const EdgeInsets.only(top: 150.0),
@@ -175,7 +214,7 @@ class _StatsState extends State<Stats> {
                     ),
                   )
                   : StatsChart(
-                    transactions: widget.transactions,
+                    transactions: filteredTransactions,
                     filter: filters[selectedIndex],
                   ),
             ],

@@ -43,11 +43,7 @@ class _StatsChartState extends State<StatsChart> {
               )
               .fold<double>(
                 0.0,
-                (sum, transaction) =>
-                    (transaction.isIncome
-                        ? transaction.amount
-                        : -transaction.amount) +
-                    sum,
+                (sum, transaction) => transaction.amount + sum,
               );
           spots.add(FlSpot(i.toDouble(), dailyTransactions));
           labels.add(DateFormat.E().format(day));
@@ -61,14 +57,7 @@ class _StatsChartState extends State<StatsChart> {
                     transaction.date.year == now.year &&
                     transaction.date.month == i,
               )
-              .fold(
-                0.0,
-                (sum, transaction) =>
-                    (transaction.isIncome
-                        ? transaction.amount
-                        : -transaction.amount) +
-                    sum,
-              );
+              .fold(0.0, (sum, transaction) => transaction.amount + sum);
           spots.add(FlSpot((i - 1).toDouble(), monthTransactions));
           labels.add(DateFormat.MMM().format(DateTime(now.year, i)));
         }
@@ -81,14 +70,7 @@ class _StatsChartState extends State<StatsChart> {
           final year = years[i];
           final total = transactions
               .where((transactions) => transactions.date.year == year)
-              .fold(
-                0.0,
-                (sum, transactions) =>
-                    sum +
-                    (transactions.isIncome
-                        ? transactions.amount
-                        : -transactions.amount),
-              );
+              .fold(0.0, (sum, transactions) => transactions.amount + sum);
           spots.add(FlSpot(i.toDouble(), total));
           labels.add(year.toString());
         }
@@ -114,7 +96,7 @@ class _StatsChartState extends State<StatsChart> {
     }
 
     final chartFilter = getChartFilterFromString(widget.filter);
-    final chartData = getChartData(transactions, chartFilter);
+    final chartData = getChartData(widget.transactions, chartFilter);
     final spots = chartData['spots'] as List<FlSpot>;
     final labels = chartData['labels'] as List<String>;
     const double pointWidth = 50.0;
@@ -133,12 +115,12 @@ class _StatsChartState extends State<StatsChart> {
         ),
       );
     }
-
+    final currencyFormatter = NumberFormat('#,##0', 'en_NG');
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: ClampingScrollPhysics(),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 50),
         child: SizedBox(
           width: chartWidth,
           height: 200,
@@ -182,7 +164,7 @@ class _StatsChartState extends State<StatsChart> {
                   getTooltipItems: (List<LineBarSpot> touchedSpots) {
                     return touchedSpots.map((barSpot) {
                       return LineTooltipItem(
-                        '\₦${barSpot.y.toStringAsFixed(0)}',
+                        '₦${currencyFormatter.format(barSpot.y)}',
                         TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -239,7 +221,7 @@ class _StatsChartState extends State<StatsChart> {
                   spots: spots,
                   isCurved: true,
 
-                  curveSmoothness: 0.5,
+                  curveSmoothness: 0.4,
                   color: Colors.yellow.shade700,
                   barWidth: 3,
                   isStrokeCapRound: true,
